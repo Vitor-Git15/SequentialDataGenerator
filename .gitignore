@@ -1,0 +1,15 @@
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# VS Code settings
+.vscode/
+
+# Virtualenv
+.venv/
+venv/
+
+# Project specific ignores
+/configs/rules/*
+/data/*
