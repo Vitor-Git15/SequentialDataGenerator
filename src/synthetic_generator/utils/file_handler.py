@@ -2,6 +2,7 @@
 
 import json
 from typing import List, Dict
+import numpy as np
 
 def load_signal_rules(file_path: str) -> List[Dict]:
     """Load and validate signaling rules from a JSON file."""
@@ -36,3 +37,12 @@ def load_vocabulary(file_path):
     except Exception as e:
         print(f"Error: Could not load vocabulary from '{file_path}'. Using default vocabulary.")
         return ['T', 'U', 'V', 'W', 'X', 'Y', 'Z']
+    
+
+def save_sequences_to_file(sequences, filename="data/synth.dat"):
+    np.savetxt(filename, sequences, fmt="%s")
+    print(f"Sequências salvas em '{filename}'")
+
+def save_dataframe_to_csv(df, filename="data/synth.csv"):
+    df.to_csv(filename, index=False)
+    print(f"DataFrame salvo em '{filename}'")

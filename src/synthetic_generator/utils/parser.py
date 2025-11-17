@@ -10,9 +10,10 @@ def validate_parser_input(input_string: str) -> (bool, str):
     2. [] indicam adjacência.
     3. {} indicam itemsets.
     4. Não são permitidos colchetes aninhados (ex: [A [B] C]).
-    5. Não são permitidos colchetes dentro de chaves (ex: {A [B] C}).
-    6. Não são permitidas chaves ou colchetes vazios.
-    7. Não são permitidos parênteses/chaves sem correspondência.
+    5. Não são permitidas chaves dentro de chaves (ex: {A {B} C}).
+    6. Não são permitidos colchetes dentro de chaves (ex: {A [B] C}).
+    7. Não são permitidas chaves ou colchetes vazios.
+    8. Não são permitidos parênteses/chaves sem correspondência.
     """
     
     invalid_chars = re.search(r"[^A-Z_0-9\[\]{}\s]", input_string)
@@ -37,6 +38,9 @@ def validate_parser_input(input_string: str) -> (bool, str):
             # Proíbe [ dentro de [
             if bracket_level > 0:
                 return False, "Error: Nested brackets (e.g., '[...[...]]') detected."
+            # Proíbe [ dentro de {
+            if brace_level > 0:
+                return False, "Error: Brackets '[' inside braces '{...}' are not allowed."
             bracket_level += 1
             
         elif token == ']':
@@ -45,6 +49,8 @@ def validate_parser_input(input_string: str) -> (bool, str):
             bracket_level -= 1
 
         elif token == '{':
+            if brace_level > 0:
+                return False, "Error: Nested braces (e.g., '{...{...}}') detected."
             brace_level += 1
             
         elif token == '}':
@@ -58,3 +64,9 @@ def validate_parser_input(input_string: str) -> (bool, str):
         return False, "Error: Unmatched opening brace '{' detected."
 
     return True, "Valid input."
+
+def validate_rules(signal_rules: list):
+    for rule in signal_rules:
+        is_valid, message = validate_parser_input(rule['element'])
+        if not is_valid:
+            raise ValueError(f"Invalid input for element '{rule['element']}': {message}")
