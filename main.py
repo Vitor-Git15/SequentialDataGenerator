@@ -4,11 +4,12 @@ import pandas as pd
 import numpy as np
 from sklearn.metrics import roc_auc_score
 
-from src.synthetic_generator.utils.validator import SequenceValidator
 from src.synthetic_generator.utils.parser import validate_rules
+from src.synthetic_generator.utils.validator import SequenceValidator
+from src.synthetic_generator.core.rules_orchestrator import RulesOrchestrator
 from src.synthetic_generator.utils.vocabulary_handler import get_clean_vocabulary
-from src.synthetic_generator.utils.file_handler import load_signal_rules, load_vocabulary, save_sequences_to_file, save_dataframe_to_csv
 from src.synthetic_generator.core.synthetic_dataset_generator import SyntheticDatasetGenerator
+from src.synthetic_generator.utils.file_handler import load_signal_rules, load_vocabulary, save_sequences_to_file, save_dataframe_to_csv
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description="Gerador de sequências com AUC alvo")
@@ -17,7 +18,7 @@ def parse_arguments():
     parser.add_argument("--sig", type=str, required=True, help="Caminho para o arquivo de regras")
     parser.add_argument("--gen-itemsets", action='store_true', help="Se especificado, gera itemsets aleatórios no ruído de fundo.")
     parser.add_argument("--noise-density", type=float, default=1.0, help="Densidade do ruído (0.0 a 1.0). 1.0 = denso (padrões aleatórios se formam). 0.0 = esparso (itens de ruído são únicos).")
-    parser.add_argument("--maxseq", type=int, default=10, help="Número máximo de sequências a serem geradas no conjunto final.")
+    parser.add_argument("--maxseq", type=int, default=1000, help="Número máximo de sequências a serem geradas no conjunto final.")
     return parser.parse_args()
 
 def main():
@@ -39,6 +40,16 @@ def main():
         max_itemset_size=3 if args.gen_itemsets else 1
     )
 
+    rules_orchestrator = RulesOrchestrator(synthetic_dataset_generator)
+    seqs = rules_orchestrator.generate(signal_rules, args.maxseq, target_global_auc)
+    validator = SequenceValidator()
+
+    validator.validate(seqs, signal_rules)
+
+    save_sequences_to_file(seqs['sequence'].tolist(), filename="data/synth.dat")
+    save_dataframe_to_csv(seqs, filename="data/synth.csv")
+    return
+    
     df_list = []
     for rule in signal_rules:
         element, quantity, target_auc = rule['element'], rule['quantity'], rule['target_auc']
